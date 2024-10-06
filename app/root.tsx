@@ -1,3 +1,4 @@
+import React, { useState } from "react";
 import {
   Links,
   Meta,
@@ -5,8 +6,11 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import type { LinksFunction } from "@remix-run/node";
-
+import type { LinksFunction, LoaderFunction } from "@remix-run/node";
+import { ConvexProvider, ConvexReactClient } from "convex/react";
+import { rootAuthLoader } from "@clerk/remix/ssr.server";
+import { ClerkApp } from "@clerk/remix";
+import { jaJP } from "@clerk/localizations";
 import "./tailwind.css";
 
 export const links: LinksFunction = () => [
@@ -22,7 +26,13 @@ export const links: LinksFunction = () => [
   },
 ];
 
+export const loader: LoaderFunction = (args) => rootAuthLoader(args);
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const [convex] = useState(
+    () => new ConvexReactClient(import.meta.env.VITE_CONVEX_URL!)
+  );
+
   return (
     <html lang="en">
       <head>
@@ -32,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <ConvexProvider client={convex}>{children}</ConvexProvider>
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -40,6 +50,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-export default function App() {
+function App() {
   return <Outlet />;
 }
+
+export default ClerkApp(App, {
+  localization: jaJP,
+});
