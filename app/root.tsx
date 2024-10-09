@@ -1,19 +1,17 @@
 import React, { useState } from "react";
 import {
+  json,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
-import type {
-  LinksFunction,
-  MetaFunction,
-  LoaderFunction,
-} from "@remix-run/node";
-import { ConvexProvider, ConvexReactClient } from "convex/react";
-import { rootAuthLoader } from "@clerk/remix/ssr.server";
-import { ClerkApp } from "@clerk/remix";
+import type { LinksFunction, MetaFunction } from "@remix-run/node";
+import { ConvexReactClient } from "convex/react";
+import { ConvexProviderWithClerk } from "convex/react-clerk";
+import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { jaJP } from "@clerk/localizations";
 import styles from "./tailwind.css?url";
 
@@ -26,13 +24,16 @@ export const meta: MetaFunction = () => {
 
 export const links: LinksFunction = () => [{ rel: "stylesheet", href: styles }];
 
-export const loader: LoaderFunction = (args) => rootAuthLoader(args);
+export async function loader() {
+  return json({
+    ENV: {
+      CONVEX_URL: process.env.CONVEX_URL!,
+      CLERK_PUBLISHABLE_KEY: process.env.CLERK_PUBLISHABLE_KEY!,
+    },
+  });
+}
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const [convex] = useState(
-    () => new ConvexReactClient(import.meta.env.VITE_CONVEX_URL!)
-  );
-
   return (
     <html lang="en">
       <head>
@@ -42,7 +43,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        <ConvexProvider client={convex}>{children}</ConvexProvider>
+        {children}
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -50,10 +51,17 @@ export function Layout({ children }: { children: React.ReactNode }) {
   );
 }
 
-function App() {
-  return <Outlet />;
+export default function App() {
+  const { ENV } = useLoaderData<typeof loader>();
+  const [convex] = useState(() => new ConvexReactClient(ENV.CONVEX_URL));
+  return (
+    <ClerkProvider
+      publishableKey={ENV.CLERK_PUBLISHABLE_KEY}
+      localization={jaJP}
+    >
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <Outlet />
+      </ConvexProviderWithClerk>
+    </ClerkProvider>
+  );
 }
-
-export default ClerkApp(App, {
-  localization: jaJP,
-});

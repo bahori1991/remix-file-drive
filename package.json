@@ -11,8 +11,8 @@
     "typecheck": "tsc"
   },
   "dependencies": {
+    "@clerk/clerk-react": "^5.11.0",
     "@clerk/localizations": "^3.1.2",
-    "@clerk/remix": "^4.2.35",
     "@radix-ui/react-slot": "^1.1.0",
     "@remix-run/node": "^2.12.1",
     "@remix-run/react": "^2.12.1",
