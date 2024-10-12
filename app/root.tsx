@@ -14,6 +14,7 @@ import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import { jaJP } from "@clerk/localizations";
 import styles from "./tailwind.css?url";
+import { Header } from "./components/header";
 
 export const meta: MetaFunction = () => {
   return [
@@ -60,6 +61,7 @@ export default function App() {
       localization={jaJP}
     >
       <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        <Header />
         <Outlet />
       </ConvexProviderWithClerk>
     </ClerkProvider>
